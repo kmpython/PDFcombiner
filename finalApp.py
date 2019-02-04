@@ -3,16 +3,24 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import io
 import os
+import shutil
 
+TEMP_DIR = os.path.join('./TempDirForPdfs/')
+INPUT = os.path.join('.')
 
 def retrieve_pdfs_to_combine():
     pdf_list = []
-    #lst = os.listdir("D:\\Python_Projects\\NDAgenerator\\InputFolder\\")
-    Input = os.path.join('.')
 
-    for item in os.listdir(Input):
+    for item in os.listdir(INPUT):
         if item.endswith('.pdf'):
             pdf_list.append(item)
+
+    #if os.path.isdir('./TempDirForPdfs'):
+    if os.path.isdir(TEMP_DIR):
+        print("Temp directory already exists. It will be overridden !")
+        os.rmdir(TEMP_DIR)
+    else:
+        os.mkdir(TEMP_DIR)
 
     return pdf_list
 
@@ -41,8 +49,6 @@ def perform_pdf_validations(pdf_lst):
         else:
             continue
 
-
-
     if abend_flag:
         print("pdf title names and position validation failed ! check log for more details")
         exit(1)
@@ -60,7 +66,6 @@ def attach_page_numbers(pdf, output, current_page_num):
     for i in range(0, page_count_for_pdf):
         page = existing_pdf.getPage(i)
         size = page.mediaBox
-        # create a new PDF with Reportlab
         packet = io.BytesIO()
         can = canvas.Canvas(packet, pagesize=letter)
         can.drawString(int(size[2]) - 40, 15, str(current_page_num).zfill(4))
@@ -83,7 +88,9 @@ def generate_content_page(index_list):
     print("generating content page canvas")
 
     height = 700
-    content_canvas = canvas.Canvas("content.pdf", pagesize=letter)
+    #content_canvas = canvas.Canvas(".\\TempDirForPdfs\\content.pdf", pagesize=letter)
+    #content_canvas = canvas.Canvas(os.path.join('./TempDirForPdfs/CONTENT.pdf'), pagesize=letter)
+    content_canvas = canvas.Canvas(os.path.join(TEMP_DIR, 'CONTENT.pdf'), pagesize=letter)
     content_canvas.drawCentredString(320, 750, "CONTENTS")
 
     for namepage in index_list:
@@ -100,7 +107,7 @@ def generate_content_page(index_list):
 def merge_all_pdfs(contentCanvas , FinalPdfOutputStream):
 
     print("creating merged pdf")
-    outputStream = open("D:\\Python_Projects\\NDAgenerator\\pdf_merger_new.pdf", "wb")
+    outputStream = open(os.path.join(TEMP_DIR, 'MERGED.pdf') , 'wb')
     FinalPdfOutputStream.write(outputStream)
     outputStream.close()
     print("merged pdf created")
@@ -111,7 +118,7 @@ def merge_all_pdfs(contentCanvas , FinalPdfOutputStream):
 
     merger = PdfFileMerger()
 
-    for generated_pdfs in ["content.pdf", "pdf_merger_new.pdf"]:
+    for generated_pdfs in [os.path.join(TEMP_DIR, 'CONTENT.pdf'), os.path.join(TEMP_DIR, 'MERGED.pdf')]:
         merger.append(generated_pdfs)
 
     return merger
@@ -137,15 +144,14 @@ def main():
     final_pdf = merge_all_pdfs(content_page_canvas , FinalOutputStream)
 
     print("Finishing touches.....")
-    final_pdf.write("FINAL.pdf")
+    final_pdf.write(os.path.join(TEMP_DIR, 'FINAL.pdf'))
     print("Final Pdf written")
 
     print("Hang tight..")
-    for file in ['pdf_merger_new.pdf' , 'content.pdf' ,]:
-        os.remove(os.path.join('.', file))
-
+    #for file in [os.path.join(TEMP_DIR, 'MERGED.pdf') , os.path.join(TEMP_DIR, 'CONTENT.pdf'), os.path.join(TEMP_DIR, 'CONTENT.pdf')]:
+    #for file in os.listdir(TEMP_DIR):
+    #    shutil.copy(file, INPUT)
     print("PROCESS SUCCESS")
-
 
 
 if __name__ == "__main__": main()
