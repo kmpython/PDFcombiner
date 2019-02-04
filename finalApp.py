@@ -7,9 +7,10 @@ import os
 
 def retrieve_pdfs_to_combine():
     pdf_list = []
-    lst = os.listdir("D:\\Python_Projects\\NDAgenerator\\InputFolder\\")
+    #lst = os.listdir("D:\\Python_Projects\\NDAgenerator\\InputFolder\\")
+    Input = os.path.join('.')
 
-    for item in lst:
+    for item in os.listdir(Input):
         if item.endswith('.pdf'):
             pdf_list.append(item)
 
@@ -17,6 +18,7 @@ def retrieve_pdfs_to_combine():
 
 
 def perform_pdf_validations(pdf_lst):
+    print("Validating files")
     file_position_list = []
     position_count_dict = {}
     abend_flag = False
@@ -26,7 +28,7 @@ def perform_pdf_validations(pdf_lst):
             position , title = pdf.split('_')
             file_position_list.append(position)
         except:
-            print("{0} contains multiple _ in the title".format(pdf))
+            print("{0} title is invalid format. Correct format is XX_title-name-here.pdf".format(pdf))
             abend_flag = True
 
     for position in file_position_list:
@@ -39,9 +41,13 @@ def perform_pdf_validations(pdf_lst):
         else:
             continue
 
+
+
     if abend_flag:
         print("pdf title names and position validation failed ! check log for more details")
         exit(1)
+    else:
+        print("Looks good !")
 
 
 def attach_page_numbers(pdf, output, current_page_num):
@@ -132,7 +138,14 @@ def main():
 
     print("Finishing touches.....")
     final_pdf.write("FINAL.pdf")
+    print("Final Pdf written")
+
+    print("Hang tight..")
+    for file in ['pdf_merger_new.pdf' , 'content.pdf' ,]:
+        os.remove(os.path.join('.', file))
+
     print("PROCESS SUCCESS")
+
 
 
 if __name__ == "__main__": main()
