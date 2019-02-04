@@ -7,7 +7,7 @@ import os
 
 def retrieve_pdfs_to_combine():
     pdf_list = []
-    lst = os.listdir("D:\\Python_Projects\\NDAgenerator\\")
+    lst = os.listdir("D:\\Python_Projects\\NDAgenerator\\InputFolder\\")
 
     for item in lst:
         if item.endswith('.pdf'):

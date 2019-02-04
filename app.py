@@ -12,6 +12,7 @@ for item in lst:
     if item.endswith('.pdf'):
         pdf_list.append(item)
 
+pdf_list.sort()
 page_num = 1
 output = PdfFileWriter()
 
@@ -19,20 +20,24 @@ output = PdfFileWriter()
 for pdf in pdf_list:
     print(pdf)
     index_list.append((pdf, page_num))
-    existing_pdf = PdfFileReader(open(pdf, "rb"))
+    existing_pdf = PdfFileReader(open(pdf, "rb"), strict=False)
     page_count_for_pdf = existing_pdf.getNumPages()
 
     for i in range(0, page_count_for_pdf):
+        page = existing_pdf.getPage(i)
+        size = page.mediaBox
+
         # create a new PDF with Reportlab
         packet = io.BytesIO()
         can = canvas.Canvas(packet, pagesize=letter)
-        can.drawString(530, 15, str(page_num).zfill(4))
+#        can.drawString(530, 15, str(page_num).zfill(4))
+        can.drawString(int(size[2]) - 40, 15, str(page_num).zfill(4))
         can.save()
         packet.seek(0)
         new_pdf = PdfFileReader(packet)
         page_num += 1
 
-        page = existing_pdf.getPage(i)
+#        page = existing_pdf.getPage(i)
         # add the "watermark" (which is the new pdf) on the existing page
         page.mergePage(new_pdf.getPage(0))
         output.addPage(page)
@@ -67,3 +72,8 @@ for generated_pdfs in ["content.pdf" , "pdf_merger_new.pdf"]:
     merger.append(generated_pdfs)
 merger.write("final.pdf")
 print("SUCCESS")
+
+def main():
+    pass
+
+if __name__ == "__main__": main()
