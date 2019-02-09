@@ -4,6 +4,7 @@ from reportlab.lib.pagesizes import letter
 import io
 import os
 import shutil
+import time
 
 TEMP_DIR = os.path.join('./TempDirForPdfs/')
 INPUT = os.path.join('.')
@@ -18,9 +19,11 @@ def retrieve_pdfs_to_combine():
     #if os.path.isdir('./TempDirForPdfs'):
     if os.path.isdir(TEMP_DIR):
         print("Temp directory already exists. It will be overridden !")
-        os.rmdir(TEMP_DIR)
+        shutil.rmtree(TEMP_DIR)
+        os.mkdir(TEMP_DIR)
     else:
         os.mkdir(TEMP_DIR)
+        time.sleep(5)
 
     return pdf_list
 
@@ -149,9 +152,10 @@ def main():
 
     print("Hang tight..")
     #for file in [os.path.join(TEMP_DIR, 'MERGED.pdf') , os.path.join(TEMP_DIR, 'CONTENT.pdf'), os.path.join(TEMP_DIR, 'CONTENT.pdf')]:
-    #for file in os.listdir(TEMP_DIR):
-    #    shutil.copy(file, INPUT)
+
+    shutil.copy((os.path.join(TEMP_DIR, 'FINAL.pdf')), INPUT)
     print("PROCESS SUCCESS")
 
 
-if __name__ == "__main__": main()
+if __name__ == "__main__":
+    main()
