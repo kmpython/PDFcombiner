@@ -151,8 +151,6 @@ def main():
     print("Final Pdf written")
 
     print("Hang tight..")
-    #for file in [os.path.join(TEMP_DIR, 'MERGED.pdf') , os.path.join(TEMP_DIR, 'CONTENT.pdf'), os.path.join(TEMP_DIR, 'CONTENT.pdf')]:
-
     shutil.copy((os.path.join(TEMP_DIR, 'FINAL.pdf')), INPUT)
     print("PROCESS SUCCESS")
 
