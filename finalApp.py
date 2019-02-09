@@ -4,7 +4,7 @@ from reportlab.lib.pagesizes import letter
 import io
 import os
 import shutil
-import time
+import logging
 
 TEMP_DIR = os.path.join('./TempDirForPdfs/')
 INPUT = os.path.join('.')
@@ -23,7 +23,6 @@ def retrieve_pdfs_to_combine():
         os.mkdir(TEMP_DIR)
     else:
         os.mkdir(TEMP_DIR)
-        time.sleep(5)
 
     return pdf_list
 
@@ -39,7 +38,8 @@ def perform_pdf_validations(pdf_lst):
             position , title = pdf.split('_')
             file_position_list.append(position)
         except:
-            print("{0} title is invalid format. Correct format is XX_title-name-here.pdf".format(pdf))
+            #print("{0} title is invalid format. Correct format is XX_title-name-here.pdf".format(pdf))
+            logging.error('{0} title is in invalid format. Correct format is XX_title-name-here.pdf'.format(pdf))
             abend_flag = True
 
     for position in file_position_list:
@@ -47,7 +47,7 @@ def perform_pdf_validations(pdf_lst):
 
     for key , value in position_count_dict.items():
         if value > 1:
-            print("position {0} conflict between  {1} files ".format(key, value))
+            logging.error("position {0} conflict between  {1} files ".format(key, value))
             abend_flag = True
         else:
             continue
@@ -56,12 +56,12 @@ def perform_pdf_validations(pdf_lst):
         print("pdf title names and position validation failed ! check log for more details")
         exit(1)
     else:
-        print("Looks good !")
+        logging.info("Looks good !")
 
 
 def attach_page_numbers(pdf, output, current_page_num):
 
-    print("Processing {0} file".format(pdf))
+    logging.info("Processing {0} file".format(pdf))
 
     existing_pdf = PdfFileReader(open(pdf, "rb") , strict=False)
     page_count_for_pdf = existing_pdf.getNumPages()
@@ -81,43 +81,56 @@ def attach_page_numbers(pdf, output, current_page_num):
         page.mergePage(new_pdf.getPage(0))
         output.addPage(page)
 
-    print("process success")
+    logging.info("process success")
 
     return (output , current_page_num)
 
 
 def generate_content_page(index_list):
 
-    print("generating content page canvas")
+    logging.info("generating content page canvas")
 
     height = 700
-    #content_canvas = canvas.Canvas(".\\TempDirForPdfs\\content.pdf", pagesize=letter)
-    #content_canvas = canvas.Canvas(os.path.join('./TempDirForPdfs/CONTENT.pdf'), pagesize=letter)
     content_canvas = canvas.Canvas(os.path.join(TEMP_DIR, 'CONTENT.pdf'), pagesize=letter)
     content_canvas.drawCentredString(320, 750, "CONTENTS")
 
     for namepage in index_list:
-        title_detl, page = namepage
-        srno, title_name = title_detl.split('_')
-        content_canvas.drawString(10, height, str(srno + ' ' + title_name + '..........' + str(page)))
+        detail = get_content_page_detl(namepage)
+        content_canvas.drawString(25, height, str(detail[0]) + ' ' + detail[1] + detail[2] + str(detail[3]))
         height -= 20
 
-    print("content page canvas generated")
+    logging.info("content page canvas generated")
 
     return content_canvas
 
 
+def get_content_page_detl(name_and_page):
+
+    title_detl, page = name_and_page
+
+    srno, title_name_with_exten =title_detl.split('_')
+
+    title_name = title_name_with_exten.split('.')[0]
+
+    total_len = len(title_name) + len(str(page))
+    spaces = 160 - total_len
+    filler = ''.join([' ']*spaces)
+
+    return (srno, title_name, filler, page)
+
+
+
 def merge_all_pdfs(contentCanvas , FinalPdfOutputStream):
 
-    print("creating merged pdf")
+    logging.info("creating merged pdf")
     outputStream = open(os.path.join(TEMP_DIR, 'MERGED.pdf') , 'wb')
     FinalPdfOutputStream.write(outputStream)
     outputStream.close()
-    print("merged pdf created")
+    logging.info("merged pdf created")
 
-    print("generating content pdf")
+    logging.info("generating content pdf")
     contentCanvas.save()
-    print("content pdf created")
+    logging.info("content pdf created")
 
     merger = PdfFileMerger()
 
@@ -128,11 +141,14 @@ def merge_all_pdfs(contentCanvas , FinalPdfOutputStream):
 
 
 def main():
+
     FinalOutputStream = PdfFileWriter()
     start_page_num = 1
     index_list = []
 
     pdf_lst = retrieve_pdfs_to_combine()
+
+    logging.basicConfig(level=logging.DEBUG, filename=os.path.join(TEMP_DIR, 'LogFile.txt'), filemode='w')
 
     perform_pdf_validations(pdf_lst)
 
@@ -146,13 +162,13 @@ def main():
 
     final_pdf = merge_all_pdfs(content_page_canvas , FinalOutputStream)
 
-    print("Finishing touches.....")
+    logging.info("Finishing touches.....")
     final_pdf.write(os.path.join(TEMP_DIR, 'FINAL.pdf'))
-    print("Final Pdf written")
+    logging.info("Final Pdf written")
 
-    print("Hang tight..")
+    logging.info("Hang tight..")
     shutil.copy((os.path.join(TEMP_DIR, 'FINAL.pdf')), INPUT)
-    print("PROCESS SUCCESS")
+    logging.info("PROCESS SUCCESS")
 
 
 if __name__ == "__main__":
